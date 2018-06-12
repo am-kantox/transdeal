@@ -1,4 +1,4 @@
-# Transdeal
+# [![Build Status](https://travis-ci.org/am-kantox/transdeal.svg?branch=master)](https://travis-ci.org/am-kantox/transdeal) Transdeal
 
 This library is supposed to simplify rolling back transactions,
 preserving some data still stored.
