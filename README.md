@@ -43,6 +43,30 @@ end
 The above will call a configured backend(s) with the last version of modified
 objects before the transaction is rolled back.
 
+### Explicit handlers
+
+```ruby
+class CallbackHandler
+  def self.run(data)
+    puts data.inspect
+  end
+end
+
+Transdeal.transaction(users.main, callback: :callback_handler) do
+  users.main = :me
+  raise ActiveRecord::Rollback
+end
+```
+
+There are two keyword parameters currently accepted:
+
+* `callback` — anything that can be converted to proc, or symbol for the class
+  name, or a string, or a class (the class must respond to one of
+  `[:store, :run, :perform_async, :perform, :call, :[]]`—tried
+  in descending order,) or hash `{receiver: ..., method: ...}`
+* `skip_global_callbacks` — the callbacks configured through global
+  `Transdeal.configure` method will be skipped.
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/am-kantox/transdeal. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.

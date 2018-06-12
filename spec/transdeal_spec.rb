@@ -119,7 +119,7 @@ RSpec.describe Transdeal do
 
       context 'rollback with explicit handler' do
         let(:value) do
-          Transdeal.transdeal(master1, callback: :callback_handler) do
+          Transdeal.transaction(master1, callback: :callback_handler) do
             update_whatevers(*targets)
             raise ActiveRecord::Rollback
           end
