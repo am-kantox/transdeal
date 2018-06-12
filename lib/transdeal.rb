@@ -35,6 +35,7 @@ module Transdeal
     ensure
       🏺!(⚑) if ⚑
     end
+    alias_method :transaction, :transdeal
 
     protected
 

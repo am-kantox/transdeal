@@ -1,8 +1,7 @@
 # Transdeal
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/transdeal`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+This library is supposed to simplify rolling back transactions,
+preserving some data still stored.
 
 ## Installation
 
@@ -22,17 +21,31 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Somewhere in application intializers:
 
-## Development
+```ruby
+Transdeal.configure do |data|
+  puts data.inspect
+  TemporaryStorage.store(data)
+end
+```
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+and inside the application code:
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+```ruby
+Transdeal.transaction(users.main) do |data|
+  users.main = :me
+  customers.destroy_all!
+  raise ActiveRecord::Rollback
+end
+```
+
+The above will call a configured backend(s) with the last version of modified
+objects before the transaction is rolled back.
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/transdeal. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/am-kantox/transdeal. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 
@@ -40,4 +53,4 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 ## Code of Conduct
 
-Everyone interacting in the Transdeal project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/transdeal/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the Transdeal project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/am-kantox/transdeal/blob/master/CODE_OF_CONDUCT.md).
