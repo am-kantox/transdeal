@@ -116,6 +116,21 @@ RSpec.describe Transdeal do
           expect(slave1_1.reload.whatever).to eq('foo')
         end
       end
+
+      context 'rollback with explicit handler' do
+        let(:value) do
+          Transdeal.transdeal(master1, callback: :callback_handler) do
+            update_whatevers(*targets)
+            raise ActiveRecord::Rollback
+          end
+        end
+
+        it 'calls back the tuned backend' do
+          expect { value }.to output(/(whatever:.*?){2}/m).to_stdout
+          expect(master1.reload.whatever).to eq('42')
+          expect(slave1_1.reload.whatever).to eq('foo')
+        end
+      end
     end
   end
 end

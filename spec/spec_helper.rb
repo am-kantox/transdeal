@@ -18,16 +18,22 @@ RSpec.configure do |config|
 end
 
 Object.send(:remove_const, 'Master') if Kernel.const_defined?('Master')
-Object.send(:remove_const, 'Slave') if Kernel.const_defined?('Slave')
-Object.send(:remove_const, 'Partial') if Kernel.const_defined?('Partial')
-
 class Master < ActiveRecord::Base
   has_one :slave
 end
 
+Object.send(:remove_const, 'Slave') if Kernel.const_defined?('Slave')
 class Slave < ActiveRecord::Base
   belongs_to :master
 end
 
+Object.send(:remove_const, 'Partial') if Kernel.const_defined?('Partial')
 class Partial < ActiveRecord::Base
+end
+
+Object.send(:remove_const, 'CallbackHandler') if Kernel.const_defined?('CallbackHandler')
+class CallbackHandler
+  def self.run(data)
+    puts data.inspect
+  end
 end

@@ -11,29 +11,24 @@ module Transdeal
 
   class << self
     def configure *args, &λ
-      (@🏺 ||= []).push \
-        *args.map do |backend|
-          case backend
-          when Hash then hash_to_proc(backend)
-          when Symbol then hash_to_proc(receiver: backend)
-          when ->(any) { any.respond_to(:to_proc) } then any.to_proc
-          else hash_to_proc(receiver: backend)
-          end
-        end.tap { |🏺| 🏺 << λ if λ }
+      (@🏺 ||= []).concat(procify(λ, *args))
     end
 
-    def transdeal *objects, &λ
+    def transdeal *objects, skip_global_callbacks: false, callback: nil, &λ
       ⚑ = nil
       ActiveRecord::Base.transaction do
         begin
           λ[]
-        rescue
-          ⚑ = objects
+        rescue => e
+          ⚑ = {exception: e, data: objects}
           raise
         end
       end
     ensure
-      🏺!(⚑) if ⚑
+      if ⚑
+        🏺!(⚑) unless skip_global_callbacks
+        procify(callback).each { |λ| λ.(⚑) }
+      end
     end
     alias_method :transaction, :transdeal
 
@@ -45,20 +40,32 @@ module Transdeal
 
     private
 
-    def hash_to_proc any
+    def procify(*args)
+      (args.size == 1 && args.first.is_a?(Array) ? args.first : args).map do |backend|
+        case backend
+        when NilClass then nil
+        when Hash then hash_to_proc(backend)
+        when Symbol then hash_to_proc(receiver: backend)
+        when ->(be) { be.respond_to?(:to_proc) } then backend.to_proc
+        else hash_to_proc(receiver: backend)
+        end
+      end.compact
+    end
+
+    def hash_to_proc receiver:, method: nil
       receiver =
-        case any[:receiver]
-        when String, Symbol then Kernel.const_get(any[:receiver].to_s.camelize)
-        else any[:receiver]
+        case receiver
+        when String, Symbol then Kernel.const_get(receiver.to_s.camelize)
+        else receiver
         end
 
       method =
-        [any[:method], *%i|store run perform_async perform call []|].detect do |m|
+        [method, *%i|store run perform_async perform call []|].compact.detect do |m|
           receiver.respond_to?(m)
         end
 
       method.nil? ?
-        raise(InvalidBackend.new(any)) : receiver.method(method)
+        raise(InvalidBackend.new(any)) : receiver.method(method).to_proc
     end
   end
 end
